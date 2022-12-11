@@ -146,7 +146,7 @@ final class MovieQuizViewController: UIViewController {
             self.yesButton.isEnabled = true
         }
         imageView.layer.borderWidth = 8
-        imageView.layer.borderColor = isCorrect ? UIColor(named: "YP Green (iOS)")!.cgColor : UIColor(named: "YP Red (iOS)")!.cgColor
+        imageView.layer.borderColor = isCorrect ? UIColor(named: "YP Green (iOS)")?.cgColor : UIColor(named: "YP Red (iOS)")?.cgColor
     }
     
     // MARK: - Actions
