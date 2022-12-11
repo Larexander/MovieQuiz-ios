@@ -105,7 +105,7 @@ final class MovieQuizViewController: UIViewController {
             title: result.title,
             message: result.text,
             preferredStyle: .alert)
-        let action = UIAlertAction(title: result.buttonText, style: .default) {_ in
+        let action = UIAlertAction(title: result.buttonText, style: .default) { _ in
             self.currentQuestionIndex = 0
             self.correctAnswers = 0
             let firstQuestion = questions[self.currentQuestionIndex]
@@ -145,10 +145,8 @@ final class MovieQuizViewController: UIViewController {
             self.noButton.isEnabled = true
             self.yesButton.isEnabled = true
         }
-        imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
-        imageView.layer.cornerRadius = 20
-        imageView.layer.borderColor = isCorrect ? UIColor.green.cgColor : UIColor.red.cgColor
+        imageView.layer.borderColor = isCorrect ? UIColor(named: "YP Green (iOS)")!.cgColor : UIColor(named: "YP Red (iOS)")!.cgColor
     }
     
     // MARK: - Actions
