@@ -7,13 +7,19 @@
 
 import UIKit
 
-struct AlertPresenter {
-     func present(alert: AlertModel, presentingViewController: UIViewController) {
-         let alertController = UIAlertController(title: alert.title, message: alert.message, preferredStyle: .alert)
-        
-         let action = UIAlertAction(title: alert.buttonText, style: .default, handler: { _ in alert.completion() })
-        
+struct AlertPresenter: AlertPresenterProtocol {
+ 
+    var delegate: AlertPresenterDelegate?
+    
+    func present(alert: AlertModel) {
+        let alertController = UIAlertController(title: alert.title,
+                                                message: alert.message,
+                                                preferredStyle: .alert)
+        let action = UIAlertAction(title: alert.buttonText,
+                                   style: .default,
+                                   handler: alert.completion)
         alertController.addAction(action)
-        presentingViewController.present(alertController, animated: true, completion: nil)
+        delegate?.didPresentAlert(alert: alertController)
     }
+    
 }
