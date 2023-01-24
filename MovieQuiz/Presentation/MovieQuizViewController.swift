@@ -18,8 +18,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     @IBOutlet private weak var imageView: UIImageView!
     @IBOutlet private weak var questionLabel: UILabel!
     @IBOutlet private weak var noButton: UIButton!
-    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet private weak var yesButton: UIButton!
+    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
+    
     
     // MARK: - Lifecycle
     
@@ -79,7 +80,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                                     buttonText: "Попробовать еще раз",
                                     completion: { [weak self] _ in
             guard let self = self else { return }
-            self.questionFactory?.requestNextQuestion()
+            self.showLoadingIndicator()
+            self.questionFactory?.loadData()
         })
         alertPresenter?.present(alert: alertModel)
     }
