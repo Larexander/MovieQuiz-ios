@@ -57,7 +57,7 @@
                                             </userDefinedRuntimeAttribute>
                                         </userDefinedRuntimeAttributes>
                                     </imageView>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Рейтинг этого фильма меньше, чем 5?" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KLH-vq-aq7" userLabel="Question Label">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Рейтинг этого фильма больше чем 7?" textAlignment="center" lineBreakMode="tailTruncation" numberOfLines="2" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KLH-vq-aq7" userLabel="Question Label">
                                         <rect key="frame" x="0.0" y="648.66666666666663" width="390" height="100.33333333333337"/>
                                         <fontDescription key="fontDescription" name="YSDisplay-Bold" family="YS Display" pointSize="23"/>
                                         <color key="textColor" name="YP White (iOS)"/>
@@ -109,6 +109,9 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" misplaced="YES" hidesWhenStopped="YES" animating="YES" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="JtD-db-dVb">
+                                <rect key="frame" x="205" y="456" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black (iOS)"/>
@@ -117,9 +120,12 @@
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="G6s-8d-rLk" secondAttribute="trailing" constant="20" id="NVI-0x-jIj"/>
                             <constraint firstItem="G6s-8d-rLk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="Vhc-Wn-yhD"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="G6s-8d-rLk" secondAttribute="bottom" id="W9F-vN-KKk"/>
+                            <constraint firstItem="JtD-db-dVb" firstAttribute="centerX" secondItem="sOh-cg-b9s" secondAttribute="centerX" id="fRz-6H-DCi"/>
+                            <constraint firstItem="JtD-db-dVb" firstAttribute="centerY" secondItem="sOh-cg-b9s" secondAttribute="centerY" id="qn4-K7-feH"/>
                         </constraints>
                     </view>
                     <connections>
+                        <outlet property="activityIndicator" destination="JtD-db-dVb" id="4Y8-o2-snE"/>
                         <outlet property="counterLabel" destination="SW7-e1-Ke5" id="3d7-BZ-9RO"/>
                         <outlet property="imageView" destination="sOh-cg-b9s" id="W7K-l0-wJ6"/>
                         <outlet property="noButton" destination="p8n-g7-k9q" id="Rgg-c7-e7r"/>
@@ -129,7 +135,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="-55.072463768115945" y="55.580357142857139"/>
+            <point key="canvasLocation" x="-55.813953488372093" y="55.36480686695279"/>
         </scene>
     </scenes>
     <resources>
