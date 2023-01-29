@@ -40,7 +40,8 @@ class QuestionFactory: QuestionFactoryProtocol {
                 print("Failed to load image")
             }
             let rating = Float(movie.rating) ?? 0
-            let text = "Рейтинг этого фильма больше чем 7?"
+            let randomRating = [5,6,7]
+            let text = "Рейтинг этого фильма больше чем \(randomRating.randomElement() ?? 0)?"
             let correctAnswer = rating > 7
             let question = QuizQuestion(image: imageData,
                                          text: text,
