@@ -6,13 +6,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
     
+    private let presenter = MovieQuizPresenter()
     private var alertPresenter: AlertPresenter?
     private var quizQuestion: QuizQuestion?
     private var questionFactory: QuestionFactory?
     private var statisticService: StatisticService?
-    private var currentQuestionIndex = 0
     private var correctAnswers: Int = 0
-    private let questionsAmount: Int = 10
     
     @IBOutlet private weak var counterLabel: UILabel!
     @IBOutlet private weak var imageView: UIImageView!
@@ -47,14 +46,14 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else { return }
         quizQuestion = question
-        let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
     }
     
     func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
+        hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
     }
 
@@ -76,6 +75,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     private func showNetworkError(message: String) {
         hideLoadingIndicator()
+        self.correctAnswers = 0
+        self.presenter.resetQuestionIndex()
         let alertModel = AlertModel(title: "Ошибка",
                                     message: message,
                                     buttonText: "Попробовать еще раз",
@@ -93,23 +94,17 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         questionLabel.text = step.question
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(),
-                                 question: model.text,
-                                 questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-    } 
-    
     private func showNextQuestionOrResults() {
         imageView.layer.borderWidth = 0
-        if currentQuestionIndex == questionsAmount - 1 {
+        if presenter.isLastQuestion() {
             imageView.layer.borderWidth = 8
-            statisticService?.store(correct: correctAnswers, total: questionsAmount)
+            statisticService?.store(correct: correctAnswers, total: presenter.questionsAmount)
             guard let gamesCount = statisticService?.gamesCount else { return }
             guard let bestGame = statisticService?.bestGame else { return }
             guard let totalAccuracy = statisticService?.totalAccuracy else { return }
             let alertModel = AlertModel(title: "Этот раунд окончен!",
                                         message: """
-                                                 Ваш результат: \(correctAnswers)/\(questionsAmount)
+                                                 Ваш результат: \(correctAnswers)/\(presenter.questionsAmount)
                                                  Количество сыгранных квизов: \(gamesCount)
                                                  Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
                                                  Средняя точность: \(String(format: "%.2f", totalAccuracy))%
@@ -119,12 +114,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
                 guard let self = self else { return }
                 self.imageView.layer.borderWidth = 0
                 self.correctAnswers = 0
-                self.currentQuestionIndex = 0
+                self.presenter.resetQuestionIndex()
                 self.questionFactory?.requestNextQuestion()
             })
             alertPresenter?.present(alert: alertModel)
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
         }
     }
