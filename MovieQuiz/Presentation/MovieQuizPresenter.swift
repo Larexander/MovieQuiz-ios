@@ -12,11 +12,11 @@ final class MovieQuizPresenter {
     
     internal weak var viewController: MovieQuizViewController?
     internal let questionsAmount: Int = 10
-    internal var currentQuestion: CurrentQuestion?
+    internal var currentQuestion: QuizQuestion?
     private var currentQuestionIndex = 0
     
     
-    func convert(model: CurrentQuestion) -> QuizStepViewModel {
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(),
                                  question: model.text,
                                  questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
@@ -51,5 +51,14 @@ final class MovieQuizPresenter {
          
          viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
      }
+    
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        guard let question = question else { return }
+        currentQuestion = question
+        let viewModel = convert(model: question)
+        DispatchQueue.main.async { [weak self] in
+            self?.viewController?.show(quiz: viewModel)
+        }
+    }
     
 }

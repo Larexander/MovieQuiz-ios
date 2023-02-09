@@ -1,14 +1,13 @@
 import UIKit
 
 final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
-    
+   
     // MARK: - Properties
     
     override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
     
     private let presenter = MovieQuizPresenter()
     private var alertPresenter: AlertPresenter?
-    private var currentQuestion: CurrentQuestion?
     private var questionFactory: QuestionFactory?
     private var statisticService: StatisticService?
     private var correctAnswers: Int = 0
@@ -44,13 +43,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     
     // MARK: - Question Factory Delegate
     
-    func didReceiveNextQuestion(question: CurrentQuestion?) {
-        guard let question = question else { return }
-        currentQuestion = question
-        let viewModel = presenter.convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
+    func didReceiveNextQuestion(question: QuizQuestion?) {
+        presenter.didReceiveNextQuestion(question: question)
     }
     
     func didLoadDataFromServer() {
@@ -89,7 +83,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         alertPresenter?.present(alert: alertModel)
     }
     
-    private func show(quiz step: QuizStepViewModel) {
+    internal func show(quiz step: QuizStepViewModel) {
         counterLabel.text = step.questionNumber
         imageView.image = step.image
         questionLabel.text = step.question
@@ -144,14 +138,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     // MARK: - Actions
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        presenter.currentQuestion = currentQuestion
-        presenter.yesButtonClicked()
-    }
-
-    
-    @IBAction private func noButtonClicked(_ sender: UIButton) {
-          presenter.currentQuestion = currentQuestion
-          presenter.noButtonClicked()
-      }
+         presenter.yesButtonClicked()
+     }
+     
+     @IBAction private func noButtonClicked(_ sender: UIButton) {
+         presenter.noButtonClicked()
+     }
     
 }
