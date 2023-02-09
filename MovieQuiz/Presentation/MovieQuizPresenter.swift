@@ -10,10 +10,13 @@ import UIKit
 
 final class MovieQuizPresenter {
     
-    let questionsAmount: Int = 10
+    internal weak var viewController: MovieQuizViewController?
+    internal let questionsAmount: Int = 10
+    internal var currentQuestion: CurrentQuestion?
     private var currentQuestionIndex = 0
     
-    func convert(model: QuizQuestion) -> QuizStepViewModel {
+    
+    func convert(model: CurrentQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(),
                                  question: model.text,
                                  questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
@@ -30,5 +33,23 @@ final class MovieQuizPresenter {
         func switchToNextQuestion() {
             currentQuestionIndex += 1
         }
+    
+    func yesButtonClicked() {
+         didAnswer(isYes: true)
+     }
+     
+     func noButtonClicked() {
+         didAnswer(isYes: false)
+     }
+     
+     private func didAnswer(isYes: Bool) {
+         guard let currentQuestion = currentQuestion else {
+             return
+         }
+         
+         let givenAnswer = isYes
+         
+         viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+     }
     
 }
