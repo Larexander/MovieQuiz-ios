@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
+final class MovieQuizViewController: UIViewController, AlertPresenterDelegate {
    
     // MARK: - Properties
     
@@ -15,14 +15,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
     @IBOutlet private weak var yesButton: UIButton!
     @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
     
-    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         showLoadingIndicator()
         self.presenter.alertPresenter = AlertPresenter(delegate: self)
-        self.presenter.questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        self.presenter.questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: presenter)
         self.presenter.statisticService = StatisticServiceImplementation()
         self.presenter.questionFactory?.loadData()
         self.presenter.viewController = self
@@ -36,22 +35,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             self?.present(alert, animated: true, completion: nil)
         }
     }
-    
-    // MARK: - Question Factory Delegate
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        self.presenter.didReceiveNextQuestion(question: question)
-    }
-    
-    func didLoadDataFromServer() {
-        hideLoadingIndicator()
-        self.presenter.questionFactory?.requestNextQuestion()
-    }
 
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-    
     // MARK: - Internal Functions
     
     internal func show(quiz step: QuizStepViewModel) {
@@ -77,19 +61,12 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
         imageView.layer.borderColor = isCorrect ? UIColor(named: "YP Green (iOS)")?.cgColor : UIColor(named: "YP Red (iOS)")?.cgColor
     }
     
-    // MARK: - Private Functions
-    
-    private func showLoadingIndicator() {
-        activityIndicator.isHidden = false
-        activityIndicator.startAnimating() 
-    }
-    
-    private func hideLoadingIndicator() {
+    internal func hideLoadingIndicator() {
         activityIndicator.isHidden = true
         activityIndicator.stopAnimating()
       }
     
-    private func showNetworkError(message: String) {
+    internal func showNetworkError(message: String) {
         hideLoadingIndicator()
         self.presenter.correctAnswers = 0
         self.presenter.restartGame()
@@ -104,7 +81,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, 
             self.presenter.alertPresenter?.present(alert: alertModel)
     }
     
- 
+    // MARK: - Private Functions
+    
+    private func showLoadingIndicator() {
+        activityIndicator.isHidden = false
+        activityIndicator.startAnimating() 
+    }
+
     private func showNextQuestionOrResults() {
         self.presenter.showNextQuestionOrResults()
     }

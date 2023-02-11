@@ -10,7 +10,6 @@ import UIKit
 
 final class MovieQuizPresenter {
     
-    
     internal weak var viewController: MovieQuizViewController?
     internal let questionsAmount: Int = 10
     internal var currentQuestion: QuizQuestion?
@@ -19,7 +18,6 @@ final class MovieQuizPresenter {
     internal var questionFactory: QuestionFactory?
     internal var alertPresenter: AlertPresenter?
     private var currentQuestionIndex = 0
-    
     
     func convert(model: QuizQuestion) -> QuizStepViewModel {
         return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(),
@@ -43,11 +41,11 @@ final class MovieQuizPresenter {
          didAnswer(isYes: true)
      }
      
-     func noButtonClicked() {
+    func noButtonClicked() {
          didAnswer(isYes: false)
      }
      
-     private func didAnswer(isYes: Bool) {
+    private func didAnswer(isYes: Bool) {
          guard let currentQuestion = currentQuestion else {
              return
          }
@@ -96,4 +94,14 @@ final class MovieQuizPresenter {
         }
     }
     
+}
+
+extension MovieQuizPresenter: QuestionFactoryDelegate {
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
+    }
+    func didFailToLoadData(with error: Error) {
+        viewController?.showNetworkError(message: error.localizedDescription)
+    }
 }
