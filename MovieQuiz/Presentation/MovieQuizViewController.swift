@@ -1,162 +1,123 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate, AlertPresenterDelegate {
+protocol MovieQuizViewProtocol: AnyObject {
+    
+    func show(quiz: QuizStepViewModel)
+    func highLightImageBorder(isCorrect: Bool)
+    func setupActivityIndicator()
+    func hideLoadingIndicator()
+    func showNetworkError(message: String)
+    func finishAlert()
+    func blockingButton()
+    
+}
+
+final class MovieQuizViewController: UIViewController, MovieQuizViewProtocol {
     
     // MARK: - Properties
     
-    override var preferredStatusBarStyle: UIStatusBarStyle { return .lightContent }
+    @IBOutlet weak private var imageView: UIImageView!
+    @IBOutlet weak private var textLabel: UILabel!
+    @IBOutlet weak private var counterLabel: UILabel!
+    @IBOutlet weak private var noButton: UIButton!
+    @IBOutlet weak private var yesButton: UIButton!
+    @IBOutlet weak private var activityIndicator: UIActivityIndicatorView!
     
-    private var alertPresenter: AlertPresenter?
-    private var quizQuestion: QuizQuestion?
-    private var questionFactory: QuestionFactory?
-    private var statisticService: StatisticService?
-    private var currentQuestionIndex = 0
-    private var correctAnswers: Int = 0
-    private let questionsAmount: Int = 10
-    
-    @IBOutlet private weak var counterLabel: UILabel!
-    @IBOutlet private weak var imageView: UIImageView!
-    @IBOutlet private weak var questionLabel: UILabel!
-    @IBOutlet private weak var noButton: UIButton!
-    @IBOutlet private weak var yesButton: UIButton!
-    @IBOutlet private weak var activityIndicator: UIActivityIndicatorView!
-    
+    private var alertPresenter: AlertPresenterProtocol?
+    private var presenter: MovieQuizPresenter!
     
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        alertPresenter = AlertPresenter(delegate: self)
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
-        statisticService = StatisticServiceImplementation()
-        showLoadingIndicator()
-        questionFactory?.loadData()
+        presenter = MovieQuizPresenter(viewController: self)
+        alertPresenter = AlertPresenterDelegate()
+        alertPresenter?.didLoad(self)
     }
     
-    // MARK: - Alert Presenter Delegate
+    // MARK: - Logic
     
-    func didPresentAlert(alert: UIAlertController?) {
-        guard let alert = alert else { return }
-        DispatchQueue.main.async { [weak self] in
-            self?.present(alert, animated: true, completion: nil)
-        }
+    func setupActivityIndicator() {
+        activityIndicator.hidesWhenStopped = true
+        activityIndicator.color = UIColor(named: "YP Black (iOS)")
+        activityIndicator.startAnimating()
     }
     
-    // MARK: - Question Factory Delegate
-    
-    func didReceiveNextQuestion(question: QuizQuestion?) {
-        guard let question = question else { return }
-        quizQuestion = question
-        let viewModel = convert(model: question)
-        DispatchQueue.main.async { [weak self] in
-            self?.show(quiz: viewModel)
-        }
-    }
-    
-    func didLoadDataFromServer() {
-        activityIndicator.isHidden = true
-        questionFactory?.requestNextQuestion()
-    }
-
-    func didFailToLoadData(with error: Error) {
-        showNetworkError(message: error.localizedDescription)
-    }
-    
-    // MARK: - Private Functions
-    
-    private func showLoadingIndicator() {
+    func showLoadingIndicator() {
         activityIndicator.isHidden = false
-        activityIndicator.startAnimating() 
+        activityIndicator.startAnimating()
+        noButton.isEnabled = false
+        yesButton.isEnabled = false
     }
     
-    private func hideLoadingIndicator() {
+    func hideLoadingIndicator() {
         activityIndicator.isHidden = true
-        activityIndicator.stopAnimating()
-      }
-    
-    private func showNetworkError(message: String) {
-        hideLoadingIndicator()
-        let alertModel = AlertModel(title: "Ошибка",
-                                    message: message,
-                                    buttonText: "Попробовать еще раз",
-                                    completion: { [weak self] _ in
-            guard let self = self else { return }
-            self.showLoadingIndicator()
-            self.questionFactory?.loadData()
-        })
-        alertPresenter?.present(alert: alertModel)
     }
     
-    private func show(quiz step: QuizStepViewModel) {
+    func blockingButton() {
+        self.noButton.isEnabled.toggle()
+        self.yesButton.isEnabled.toggle()
+    }
+    
+    func showQuizResult(model: AlertModel) {
+        let alert = UIAlertController(
+            title: model.title,
+            message: model.message,
+            preferredStyle: .alert)
+        let action = UIAlertAction(
+            title: model.buttonText,
+            style: .default) { _ in model.comletion() }
+        alert.addAction(action)
+        present(alert, animated: true, completion: nil)
+        alert.view.accessibilityIdentifier = "alert"
+    }
+    
+    func show(quiz step: QuizStepViewModel) {
+        imageView.layer.borderColor = UIColor.clear.cgColor
         counterLabel.text = step.questionNumber
         imageView.image = step.image
-        questionLabel.text = step.question
+        textLabel.text = step.question
+        UIView.transition(with: imageView,
+                          duration: 0.3,
+                          animations: {self.imageView.image = step.image })
     }
     
-    private func convert(model: QuizQuestion) -> QuizStepViewModel {
-        return QuizStepViewModel(image: UIImage(data: model.image) ?? UIImage(),
-                                 question: model.text,
-                                 questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-    } 
-    
-    private func showNextQuestionOrResults() {
-        imageView.layer.borderWidth = 0
-        if currentQuestionIndex == questionsAmount - 1 {
-            imageView.layer.borderWidth = 8
-            statisticService?.store(correct: correctAnswers, total: questionsAmount)
-            guard let gamesCount = statisticService?.gamesCount else { return }
-            guard let bestGame = statisticService?.bestGame else { return }
-            guard let totalAccuracy = statisticService?.totalAccuracy else { return }
-            let alertModel = AlertModel(title: "Этот раунд окончен!",
-                                        message: """
-                                                 Ваш результат: \(correctAnswers)/\(questionsAmount)
-                                                 Количество сыгранных квизов: \(gamesCount)
-                                                 Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date.dateTimeString))
-                                                 Средняя точность: \(String(format: "%.2f", totalAccuracy))%
-                                                 """,
-                                        buttonText: "Сыграть еще раз",
-                                        completion: { [weak self] _ in
-                guard let self = self else { return }
-                self.imageView.layer.borderWidth = 0
-                self.correctAnswers = 0
-                self.currentQuestionIndex = 0
-                self.questionFactory?.requestNextQuestion()
-            })
-            alertPresenter?.present(alert: alertModel)
-        } else {
-            currentQuestionIndex += 1
-            questionFactory?.requestNextQuestion()
-        }
-    }
-    
-    private func showAnswerResult(isCorrect: Bool) {
-        if isCorrect {
-            correctAnswers += 1
-        }
-        self.noButton.isEnabled = false
-        self.yesButton.isEnabled = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+    func finishAlert() {
+        let message = presenter.makeResultMessage()
+        let alert = AlertModel(title: "Этот раунд окончен!",
+                               message: message,
+                               buttonText: "Сыграть еще раз") { [weak self] in
             guard let self = self else { return }
-            self.showNextQuestionOrResults()
-            self.noButton.isEnabled = true
-            self.yesButton.isEnabled = true
+            self.presenter.restartGame()
         }
+        alertPresenter?.show(model: alert)
+    }
+    
+    func highLightImageBorder(isCorrect: Bool) {
+        imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor(named: "YP Green (iOS)")?.cgColor : UIColor(named: "YP Red (iOS)")?.cgColor
+    }
+    
+    func showNetworkError(message: String) {
+        hideLoadingIndicator()
+        let alert = AlertModel(title: "Ошибка",
+                               message: message,
+                               buttonText: "Попробовать еще раз") {
+            [weak self] in guard let self = self else {return}
+            self.presenter.restartGame()
+        }
+        alertPresenter?.show(model: alert)
     }
     
     // MARK: - Actions
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
-        guard let quizQuestion = quizQuestion else { return }
-        let givenAnswer = true
-        self.showAnswerResult(isCorrect: givenAnswer == quizQuestion.correctAnswer)
+        presenter.yesButtonClicked()
     }
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
-        guard let quizQuestion = quizQuestion else { return }
-        let givenAnswer = false
-        self.showAnswerResult(isCorrect: givenAnswer == quizQuestion.correctAnswer)
+        presenter.noButtonClicked()
     }
-    
+   
 }
