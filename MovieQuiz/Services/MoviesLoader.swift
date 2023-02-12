@@ -5,18 +5,27 @@
 //  Created by  Александр  on 22.01.2023.
 //
 
-import Foundation
+import UIKit
 
 protocol MoviesLoading {
+    
     func loadMovies(handler: @escaping (Result<MostPopularMovies, Error>) -> Void)
+    
 }
 
 struct MoviesLoader: MoviesLoading {
-  
-    private let networkClient = NetworkClient()
     
+    // MARK: - NetworkClient
+    
+    private let networkClient: NetworkClientRouting
+    
+    init(networkClient: NetworkClientRouting = NetworkClient()) {
+        self.networkClient = networkClient
+    }
+    
+    // MARK: - URL
     private var mostPopularMoviesUrl: URL {
-        guard let url = URL(string: "https://imdb-api.com/en/API/Top250Movies/k_884qb0ed") else {
+        guard let url = URL(string: "https://imdb-api.com/en/API/MostPopularMovies/k_884qb0ed") else {
             preconditionFailure("Unable to construct mostPopularMoviesUrl")
         }
         return url
